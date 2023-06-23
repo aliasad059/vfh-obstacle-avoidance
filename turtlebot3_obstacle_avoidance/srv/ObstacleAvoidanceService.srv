@@ -1,0 +1,5 @@
+
+---
+
+# obstacle avoidance service Response
+int32 goal_angle
