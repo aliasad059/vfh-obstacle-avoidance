@@ -61,9 +61,32 @@ class VFH():
 
         return smoothed_histogram
     
+    def calculate_goal_sector(self):
+        current_position = np.array([self.current_x, self.current_y])
+        goal_direction = np.array([self.destination[0] - current_position[0], self.destination[1] - current_position[1]])
+        goal_angle = np.arctan2(goal_direction[1], goal_direction[0])
+        
+        goal_angle_deg = np.degrees(goal_angle) % 360
+        
+        goal_sector = int(goal_angle_deg / self.sector_size)
+        
+        return goal_sector
+
     def find_best_direction(self):
-        # TODO: find the best sector as VFH paper describes 
-        return 0 
+        troughs = argrelmin(self.histogram_field_vector)[0]
+        
+        if len(troughs) > 0:
+            eligible_troughs = [trough for trough in troughs if self.histogram_field_vector[trough] < self.threshold]
+            
+            if len(eligible_troughs) > 0:
+                goal_sector = self.calculate_goal_sector()
+                if goal_sector in eligible_troughs:
+                    return goal_sector
+                else:
+                    return min(eligible_troughs, key=lambda t: abs(t - self.destination)) # TODO: here we should find the nearest vally to goal and select the suitable sector
+        
+        # If no eligible troughs, choose the peak as the direction
+        return np.argmax(self.histogram_field_vector)
     
     def run(self):
         rospy.spin()
