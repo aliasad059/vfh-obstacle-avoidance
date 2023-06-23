@@ -19,8 +19,8 @@ class Controller:
         self.angular_vel_coef = 1
 
         # Create a service proxy for obstacle avoidance service
-        rospy.wait_for_service('obstacle_avoidance')
-        self.obstacle_avoidance_proxy = rospy.ServiceProxy('obstacle_avoidance', ObstacleAvoidanceService)
+        rospy.wait_for_service('vfh_obstacle_avoidance')
+        self.obstacle_avoidance_proxy = rospy.ServiceProxy('vfh_obstacle_avoidance', ObstacleAvoidanceService)
 
         # Create a publisher for robot "cmd_vel"
         self.cmd_vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
