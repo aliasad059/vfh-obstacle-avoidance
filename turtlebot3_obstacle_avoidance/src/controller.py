@@ -14,6 +14,8 @@ class Controller:
         self.move.linear.x = 0.1
 
         self.current_yaw = 0
+        self.current_x = 0
+        self.current_y = 0
 
         # The "p" parameter for your p-controller
         self.angular_vel_coef = 1
@@ -30,6 +32,8 @@ class Controller:
 
    
     def odom_callback(self, msg):
+        self.current_x = int(msg.pose.pose.position.x)
+        self.current_y = int(msg.pose.pose.position.y)
         orientation = msg.pose.pose.orientation
         _, _, self.current_yaw = tf.transformations.euler_from_quaternion((orientation.x, orientation.y, orientation.z, orientation.w))
         pass
@@ -37,8 +41,8 @@ class Controller:
     def run(self) -> None:
         try:
             while not rospy.is_shutdown():
-                goal_angle = self.call_obstacle_avoidance()
-                self.adjust_robot_movement(goal_angle)
+                streering_direction = self.call_obstacle_avoidance()
+                self.adjust_robot_movement(streering_direction)
 
                 rospy.sleep(0.1)
 
@@ -48,22 +52,24 @@ class Controller:
     def call_obstacle_avoidance(self):
         try:
             request = ObstacleAvoidanceServiceRequest()
+            request.current_x = self.current_x
+            request.current_y = self.current_y
             response = self.obstacle_avoidance_proxy(request)
 
-            return response.goal_angle
+            return response.streering_direction
         
         except rospy.ServiceException as e:
             rospy.logerr("Service call failed: %s" % str(e))
 
-    def adjust_robot_movement(self, goal_angle):
-        error = self.calculate_error(goal_angle)
+    def adjust_robot_movement(self, streering_direction):
+        error = self.calculate_error(streering_direction)
         self.move.angular.z = self.angular_vel_coef * error
 
         self.cmd_vel_publisher.publish(self.move)
 
-    def calculate_error(self, goal_angle):
-        rospy.loginfo(f'goal angle: {goal_angle}, current angle: {self.current_yaw}')
-        return goal_angle - self.current_yaw
+    def calculate_error(self, streering_direction):
+        rospy.loginfo(f'goal angle: {streering_direction}, current angle: {self.current_yaw}')
+        return streering_direction - self.current_yaw
 
 
 if __name__ == "__main__":

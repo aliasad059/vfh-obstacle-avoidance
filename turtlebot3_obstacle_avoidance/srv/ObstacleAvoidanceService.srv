@@ -1,5 +1,8 @@
+# current position of robot
+float64 current_x
+float64 current_y
 
 ---
 
 # obstacle avoidance service Response
-int32 goal_angle
+float64 streering_direction

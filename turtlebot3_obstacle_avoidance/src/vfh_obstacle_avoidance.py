@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+from copy import deepcopy
 import rospy
 from sensor_msgs.msg import LaserScan
 from scipy.signal import argrelmin
@@ -9,6 +9,8 @@ import math
 
 class VFH():
     def __init__(self, vfh_config) -> None:
+
+        rospy.init_node('vfh_obstacle_avoidance', anonymous=True)
 
         self.destination = vfh_config['destination']
         self.a = vfh_config['a']
@@ -22,14 +24,22 @@ class VFH():
         self.obstacle_avoidance_service = rospy.Service('vfh_obstacle_avoidance', ObstacleAvoidanceService, self.obstacle_avoidance_callback)
         self.scan_sub = rospy.Subscriber('/scan', LaserScan, self.scan_callback)
     
-    def obstacle_avoidance_callback(self):
+    def obstacle_avoidance_callback(self, req):
+        
+        self.current_x = req.current_x
+        self.current_y = req.current_y
+
         response = ObstacleAvoidanceServiceResponse()
-        response.goal_angle = self.find_steering_direction()
+        response.streering_direction = self.find_steering_direction()
+        # print(response)
         return response
 
     def scan_callback(self, msg):
         ranges = np.array(msg.ranges)
-        angles = np.arange(msg.angle_min, msg.angle_max, msg.angle_increment)
+        # ranges = [max(min(r, msg.range_max), msg.range_min) for r in ranges]
+        # print(len(ranges))
+        angles = np.arange(msg.angle_min, msg.angle_max + msg.angle_increment, msg.angle_increment)
+        # print(len(angles))
         histogram_field_vector = self.calculate_histogram_field_vector(ranges, angles)
         self.histogram_field_vector = self.smooth_histogram(histogram_field_vector)
     
@@ -40,8 +50,8 @@ class VFH():
         for i, distance in enumerate(ranges):
             if np.isnan(distance) or np.isinf(distance):
                 continue
-            
-            sector_index = int((np.degrees(angles[i]) + 180) / self.sector_size)
+
+            sector_index = int((np.degrees(angles[i])) / self.sector_size) % num_sectors
             certainty = 1 # TODO: maybe we need to calculate as vff does
             obstacle_presence = certainty ** 2 * (self.a - self.b * distance) # TODO: tune a and b as the obstacle presence would not be negative anymore
             sector_histogram[sector_index] += obstacle_presence
@@ -75,7 +85,7 @@ class VFH():
     def get_candidate_valleys(self):
         valleys_idx = []
         for i in range(len(self.histogram_field_vector)):
-            if self.histogram_field_vector[i] < self.VFH_THRESHOLD:
+            if self.histogram_field_vector[i] < 5:
                 valleys_idx.append(i)
             
         valleys = []
@@ -105,8 +115,9 @@ class VFH():
         return valleys
     
     def find_steering_direction(self):
+        if self.histogram_field_vector is None:
+            return 0
         valleys = self.get_candidate_valleys()
-        
         goal_sector = self.get_goal_sector()
         
         min_distance = np.inf
@@ -123,8 +134,8 @@ class VFH():
                 nearest_valley = candidate_valley
                 kn = candidate_valley[min_idx]
         
-        if len(nearest_valley) > self.VFH_S_MAX: # wide candidate valley
-            kf = (kn + self.VFH_S_MAX) % (360/5)
+        if len(nearest_valley) > 5: # wide candidate valley
+            kf = (kn + 5) % (360/5)
             teta = (kn+kf)/2 * self.sector_size
         else: # narrow candidate valley
             teta = (nearest_valley[0] + nearest_valley[-1]) / 2 * self.sector_size
