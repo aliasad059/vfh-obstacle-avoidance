@@ -1,0 +1,8 @@
+prefix=/home/hosna/Desktop/project/senario2/install
+
+Name: turtlebot3_autorace_traffic_light_detect
+Description: Description of turtlebot3_autorace_traffic_light_detect
+Version: 1.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: dynamic_reconfigure

@@ -1,0 +1,10 @@
+\subsubsection usage Usage
+\verbatim
+<node name="turtlebot3_autorace_intersection_camera" pkg="turtlebot3_autorace_intersection_camera" type="turtlebot3_autorace_intersection_camera">
+  <param name="top_x" type="int" value="80" />
+  <param name="top_y" type="int" value="11" />
+  <param name="bottom_x" type="int" value="113" />
+  <param name="bottom_y" type="int" value="94" />
+</node>
+\endverbatim
+

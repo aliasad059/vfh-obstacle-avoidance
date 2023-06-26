@@ -1,0 +1,24 @@
+\subsubsection usage Usage
+\verbatim
+<node name="turtlebot3_autorace_detect" pkg="turtlebot3_autorace_detect" type="turtlebot3_autorace_detect">
+  <param name="hue_red_l" type="int" value="0" />
+  <param name="hue_red_h" type="int" value="26" />
+  <param name="saturation_red_l" type="int" value="239" />
+  <param name="saturation_red_h" type="int" value="255" />
+  <param name="lightness_red_l" type="int" value="123" />
+  <param name="lightness_red_h" type="int" value="250" />
+  <param name="hue_yellow_l" type="int" value="19" />
+  <param name="hue_yellow_h" type="int" value="33" />
+  <param name="saturation_yellow_l" type="int" value="237" />
+  <param name="saturation_yellow_h" type="int" value="255" />
+  <param name="lightness_yellow_l" type="int" value="231" />
+  <param name="lightness_yellow_h" type="int" value="255" />
+  <param name="hue_green_l" type="int" value="40" />
+  <param name="hue_green_h" type="int" value="113" />
+  <param name="saturation_green_l" type="int" value="210" />
+  <param name="saturation_green_h" type="int" value="255" />
+  <param name="lightness_green_l" type="int" value="131" />
+  <param name="lightness_green_h" type="int" value="255" />
+</node>
+\endverbatim
+

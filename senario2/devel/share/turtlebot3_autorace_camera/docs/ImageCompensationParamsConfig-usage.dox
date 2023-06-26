@@ -1,0 +1,7 @@
+\subsubsection usage Usage
+\verbatim
+<node name="turtlebot3_autorace_camera" pkg="turtlebot3_autorace_camera" type="turtlebot3_autorace_camera">
+  <param name="clip_hist_percent" type="double" value="1.0" />
+</node>
+\endverbatim
+

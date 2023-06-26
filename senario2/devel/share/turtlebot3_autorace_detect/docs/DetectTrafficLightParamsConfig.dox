@@ -1,0 +1,23 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~hue_red_l" : \b [int] hue_red_l min: 0, default: 0, max: 179
+- \b "~hue_red_h" : \b [int] hue_red_h min: 0, default: 26, max: 179
+- \b "~saturation_red_l" : \b [int] saturation_red_l min: 0, default: 239, max: 255
+- \b "~saturation_red_h" : \b [int] saturation_red_h min: 0, default: 255, max: 255
+- \b "~lightness_red_l" : \b [int] lightness_red_l min: 0, default: 123, max: 255
+- \b "~lightness_red_h" : \b [int] lightness_red_h min: 0, default: 250, max: 255
+- \b "~hue_yellow_l" : \b [int] hue_yellow_l min: 0, default: 19, max: 179
+- \b "~hue_yellow_h" : \b [int] hue_yellow_h min: 0, default: 33, max: 179
+- \b "~saturation_yellow_l" : \b [int] saturation_yellow_l min: 0, default: 237, max: 255
+- \b "~saturation_yellow_h" : \b [int] saturation_yellow_h min: 0, default: 255, max: 255
+- \b "~lightness_yellow_l" : \b [int] lightness_yellow_l min: 0, default: 231, max: 255
+- \b "~lightness_yellow_h" : \b [int] lightness_yellow_h min: 0, default: 255, max: 255
+- \b "~hue_green_l" : \b [int] hue_green_l min: 0, default: 40, max: 179
+- \b "~hue_green_h" : \b [int] hue_green_h min: 0, default: 113, max: 179
+- \b "~saturation_green_l" : \b [int] saturation_green_l min: 0, default: 210, max: 255
+- \b "~saturation_green_h" : \b [int] saturation_green_h min: 0, default: 255, max: 255
+- \b "~lightness_green_l" : \b [int] lightness_green_l min: 0, default: 131, max: 255
+- \b "~lightness_green_h" : \b [int] lightness_green_h min: 0, default: 255, max: 255
+

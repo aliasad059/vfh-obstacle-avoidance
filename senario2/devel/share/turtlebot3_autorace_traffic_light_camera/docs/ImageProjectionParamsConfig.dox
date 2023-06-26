@@ -1,0 +1,9 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~top_x" : \b [int] Top X Pos min: 0, default: 80, max: 120
+- \b "~top_y" : \b [int] Top Y Pos min: 0, default: 11, max: 120
+- \b "~bottom_x" : \b [int] Bottom X Pos min: 0, default: 113, max: 320
+- \b "~bottom_y" : \b [int] Bottom Y Pos min: 0, default: 94, max: 320
+

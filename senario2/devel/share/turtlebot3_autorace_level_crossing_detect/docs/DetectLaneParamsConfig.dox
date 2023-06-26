@@ -1,0 +1,17 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~hue_white_l" : \b [int] hue_white_l min: 0, default: 0, max: 179
+- \b "~hue_white_h" : \b [int] hue_white_h min: 0, default: 111, max: 179
+- \b "~saturation_white_l" : \b [int] saturation_white_l min: 0, default: 0, max: 255
+- \b "~saturation_white_h" : \b [int] saturation_white_h min: 0, default: 38, max: 255
+- \b "~lightness_white_l" : \b [int] lightness_white_l min: 0, default: 126, max: 255
+- \b "~lightness_white_h" : \b [int] lightness_white_h min: 0, default: 255, max: 255
+- \b "~hue_yellow_l" : \b [int] hue_yellow_l min: 0, default: 0, max: 179
+- \b "~hue_yellow_h" : \b [int] hue_yellow_h min: 0, default: 127, max: 179
+- \b "~saturation_yellow_l" : \b [int] saturation_yellow_l min: 0, default: 70, max: 255
+- \b "~saturation_yellow_h" : \b [int] saturation_yellow_h min: 0, default: 255, max: 255
+- \b "~lightness_yellow_l" : \b [int] lightness_yellow_l min: 0, default: 95, max: 255
+- \b "~lightness_yellow_h" : \b [int] lightness_yellow_h min: 0, default: 255, max: 255
+
