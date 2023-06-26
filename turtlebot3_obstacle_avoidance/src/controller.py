@@ -6,6 +6,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 import tf
 from turtlebot3_obstacle_avoidance.srv import ObstacleAvoidanceService, ObstacleAvoidanceServiceRequest
+import math
 
 class Controller:
     def __init__(self) -> None:
@@ -54,6 +55,8 @@ class Controller:
             request = ObstacleAvoidanceServiceRequest()
             request.current_x = self.current_x
             request.current_y = self.current_y
+            request.current_yaw = self.current_yaw
+            
             response = self.obstacle_avoidance_proxy(request)
 
             return response.streering_direction
@@ -68,8 +71,15 @@ class Controller:
         self.cmd_vel_publisher.publish(self.move)
 
     def calculate_error(self, streering_direction):
-        rospy.loginfo(f'goal angle: {streering_direction}, current angle: {self.current_yaw}')
-        return streering_direction - self.current_yaw
+        error = streering_direction - self.current_yaw
+        error = streering_direction
+        if abs(error) > math.pi:
+            if error < 0: 
+                error += 2 * math.pi
+            else: 
+                error -= 2 * math.pi 
+        rospy.loginfo(f'goal angle: {streering_direction}, current angle: {self.current_yaw}, error: {error}')
+        return error
 
 
 if __name__ == "__main__":

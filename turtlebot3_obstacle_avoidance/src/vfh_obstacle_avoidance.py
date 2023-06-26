@@ -6,6 +6,7 @@ from scipy.signal import argrelmin
 import numpy as np
 from turtlebot3_obstacle_avoidance.srv import ObstacleAvoidanceService, ObstacleAvoidanceServiceResponse
 import math
+import matplotlib.pyplot as plt
 
 class VFH():
     def __init__(self, vfh_config) -> None:
@@ -28,6 +29,7 @@ class VFH():
         
         self.current_x = req.current_x
         self.current_y = req.current_y
+        self.current_yaw = req.current_yaw
 
         response = ObstacleAvoidanceServiceResponse()
         response.streering_direction = self.find_steering_direction()
@@ -51,7 +53,7 @@ class VFH():
             if np.isnan(distance) or np.isinf(distance):
                 continue
 
-            sector_index = int((np.degrees(angles[i])) / self.sector_size) % num_sectors
+            sector_index = int(((np.degrees(angles[i])) / self.sector_size)) % num_sectors
             certainty = 1 # TODO: maybe we need to calculate as vff does
             obstacle_presence = certainty ** 2 * (self.a - self.b * distance) # TODO: tune a and b as the obstacle presence would not be negative anymore
             sector_histogram[sector_index] += obstacle_presence
@@ -75,6 +77,14 @@ class VFH():
         current_position = np.array([self.current_x, self.current_y])
         goal_direction = np.array([self.destination[0] - current_position[0], self.destination[1] - current_position[1]])
         goal_angle = np.arctan2(goal_direction[1], goal_direction[0])
+
+        if goal_angle < 0:
+            goal_angle += 2 * math.pi
+
+        dif = goal_angle - self.current_yaw
+        if dif < 0:
+            dif += 2 * math.pi
+        
         
         goal_angle_deg = np.degrees(goal_angle) % 360
         
@@ -85,7 +95,7 @@ class VFH():
     def get_candidate_valleys(self):
         valleys_idx = []
         for i in range(len(self.histogram_field_vector)):
-            if self.histogram_field_vector[i] < 5:
+            if self.histogram_field_vector[i] < self.threshold:
                 valleys_idx.append(i)
             
         valleys = []
@@ -117,7 +127,11 @@ class VFH():
     def find_steering_direction(self):
         if self.histogram_field_vector is None:
             return 0
+        # self.plot_polar_density_histogram()
+        rospy.loginfo(f'vector-fields: {self.histogram_field_vector}')
         valleys = self.get_candidate_valleys()
+        rospy.loginfo(f'valleys: {valleys}')
+
         goal_sector = self.get_goal_sector()
         
         min_distance = np.inf
@@ -125,7 +139,12 @@ class VFH():
         kn = None
         for candidate_valley in valleys:
             if goal_sector in candidate_valley:
-                return math.radians(goal_sector * self.sector_size) # goal sector is in a candidate valley
+                teta = goal_sector
+                teta = teta  * self.sector_size
+                teta = teta % 360
+                rospy.loginfo(f'theta: {teta}, goal sector in candidate valley')
+                rospy.loginfo(f'candidate valley:{candidate_valley}, goal-sector: {goal_sector}')
+                return math.radians(teta) # goal sector is in a candidate valley
             
             distances = np.abs(np.array(candidate_valley) - goal_sector)
             min_idx = np.argmin(distances)
@@ -134,13 +153,50 @@ class VFH():
                 nearest_valley = candidate_valley
                 kn = candidate_valley[min_idx]
         
-        if len(nearest_valley) > 5: # wide candidate valley
-            kf = (kn + 5) % (360/5)
-            teta = (kn+kf)/2 * self.sector_size
-        else: # narrow candidate valley
-            teta = (nearest_valley[0] + nearest_valley[-1]) / 2 * self.sector_size
+        # if len(nearest_valley) > 5: # wide candidate valley
+        #     kf = (kn + 5) % (360/5)
+        #     teta = (kn+kf)/2
+        # else: # narrow candidate valley
+        #     teta = (nearest_valley[0] + nearest_valley[-1]) / 2
+        teta = nearest_valley[(len(nearest_valley) // 2)]
+        teta = teta  * self.sector_size
+        teta = teta % 360
+        rospy.loginfo(f'candidate valley:{nearest_valley}, goal-sector: {goal_sector}, teta: {teta}')
+        # rospy.loginfo(f'theta: {teta}, goal sector NOT in candidate valley. choosing the best sector...')
+        # rospy.loginfo(f'candidate valley:{nearest_valley}, kn: {kn}, goal-sector: {goal_sector}, kf: {kf}')
 
-        return math.radians(teta % 360)
+        return math.radians(teta)
+    
+    def plot_polar_density_histogram(self):
+
+        import numpy as np
+        import matplotlib.pyplot as plt
+
+        angles = np.arange(0, 360, 5)
+        density_values = self.histogram_field_vector
+
+        # Plotting setup
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='polar')
+
+        # Convert angles to radians
+        theta = np.radians(angles)
+
+        # Plot the polar bar chart
+        bars = ax.bar(theta, density_values, width=np.radians(5), align='edge')
+
+        # Customize the appearance of the bars
+        for bar in bars:
+            bar.set_alpha(0.7)
+            bar.set_facecolor('blue')
+
+        ax.set_title("Polar Bar Chart")
+        ax.set_ylim([0, np.max(density_values)])
+
+        plt.savefig("test_rasterization.pdf", dpi=150)
+
+
+
     
     def run(self):
         rospy.spin()
@@ -148,12 +204,12 @@ class VFH():
 if __name__ == "__main__":
     try:
         config = {
-            'destination' : [-7, 13],
+            'destination' : [5, 2],
             'a' : 1,
             'b' : 0.25, 
             'smoothing_factor': 2,
             'sector_size': 5,
-            'threshold':1.2
+            'threshold':3
         }
         vfh_node = VFH(vfh_config=config)
         vfh_node.run()
