@@ -30,6 +30,7 @@ class VFH():
         self.current_x = req.current_x
         self.current_y = req.current_y
         self.current_yaw = req.current_yaw
+        self.destination = [req.current_goal_x, req.current_goal_y]
 
         response = ObstacleAvoidanceServiceResponse()
         response.streering_direction = self.find_steering_direction()
@@ -75,8 +76,7 @@ class VFH():
     
     def get_goal_sector(self):
         current_position = np.array([self.current_x, self.current_y])
-        goal_direction = np.array([self.destination[0] - current_position[0], self.destination[1] - current_position[1]])
-        goal_angle = np.arctan2(goal_direction[1], goal_direction[0])
+        goal_angle = np.arctan2(self.destination[1] - current_position[1], self.destination[0] - current_position[0])
 
         if goal_angle < 0:
             goal_angle += 2 * math.pi
@@ -86,49 +86,65 @@ class VFH():
             dif += 2 * math.pi
         
         
-        goal_angle_deg = np.degrees(goal_angle) % 360
+        goal_angle_deg = np.degrees(dif) % 360
         
         goal_sector = int(goal_angle_deg / self.sector_size)
         
         return goal_sector
     
     def get_candidate_valleys(self):
-        valleys_idx = []
-        for i in range(len(self.histogram_field_vector)):
-            if self.histogram_field_vector[i] < self.threshold:
-                valleys_idx.append(i)
-            
-        valleys = []
-        candidate_valley = []
+        threshold = self.threshold
+        while True:
+            valleys_idx = []
+            for i in range(len(self.histogram_field_vector)):
+                if self.histogram_field_vector[i] < threshold:
+                    valleys_idx.append(i)
+                
+            valleys = []
+            candidate_valley = []
 
-        i = 0
-        while i < len(valleys_idx):
-            while i < len(valleys_idx) and valleys_idx[i] == (valleys_idx[i-1])%len(self.histogram_field_vector) + 1:
+            i = 0
+            while i < len(valleys_idx):
+                while i < len(valleys_idx) and valleys_idx[i] == (valleys_idx[i-1])%len(self.histogram_field_vector) + 1:
+                    candidate_valley.append(valleys_idx[i])
+                    i += 1
+                
+                if len(candidate_valley) > 0:
+                    valleys.append(deepcopy(candidate_valley))
+                    candidate_valley.clear()
+                    if i >= len(valleys_idx):
+                        break
                 candidate_valley.append(valleys_idx[i])
                 i += 1
             
-            if len(candidate_valley) > 0:
-                valleys.append(deepcopy(candidate_valley))
-                candidate_valley.clear()
-                if i >= len(valleys_idx):
-                    break
-            candidate_valley.append(valleys_idx[i])
-            i += 1
-        
-        if len(valleys) >= 2:
-            val_begin = valleys[0]
-            val_end = valleys[len(valleys)-1]
-            if (val_end[len(val_end)-1] + 1)%len(self.histogram_field_vector) == val_begin[0]:
-                val_begin = val_end + val_begin  
-                valleys[0] = val_begin
-                valleys.pop(len(valleys)-1)
-        return valleys
-    
+            if len(valleys) >= 2:
+                val_begin = valleys[0]
+                val_end = valleys[len(valleys)-1]
+                if (val_end[len(val_end)-1] + 1)%len(self.histogram_field_vector) == val_begin[0]:
+                    val_begin = val_end + val_begin  
+                    valleys[0] = val_begin
+                    valleys.pop(len(valleys)-1)
+            
+            filtered_valley = []
+            values_to_remove = list(range(13, 58))
+            for v in valleys:
+                v = [h for h in v if h not in values_to_remove]
+                if v:
+                    filtered_valley.append(v)
+            
+            if len(filtered_valley) == 0:
+                threshold += 0.5
+                # rospy.loginfo(f'threshold set to {threshold}')
+                continue
+            else:
+                threshold = self.threshold
+                return filtered_valley
+
     def find_steering_direction(self):
         if self.histogram_field_vector is None:
             return 0
         # self.plot_polar_density_histogram()
-        rospy.loginfo(f'vector-fields: {self.histogram_field_vector}')
+        # rospy.loginfo(f'vector-fields: {self.histogram_field_vector}')
         valleys = self.get_candidate_valleys()
         rospy.loginfo(f'valleys: {valleys}')
 
@@ -142,30 +158,33 @@ class VFH():
                 teta = goal_sector
                 teta = teta  * self.sector_size
                 teta = teta % 360
-                rospy.loginfo(f'theta: {teta}, goal sector in candidate valley')
-                rospy.loginfo(f'candidate valley:{candidate_valley}, goal-sector: {goal_sector}')
+                rospy.loginfo(f'candidate valley:{candidate_valley}, GOAL-SECTOR: {goal_sector}, teta: {teta}')
                 return math.radians(teta) # goal sector is in a candidate valley
             
+            
+            distances = np.abs(np.array(candidate_valley) + 72 - goal_sector)
+            min_idx = np.argmin(distances)
+            if distances[min_idx] < min_distance:
+                min_distance = distances[min_idx]
+                nearest_valley = candidate_valley
+                # kn = min_idx
+
             distances = np.abs(np.array(candidate_valley) - goal_sector)
             min_idx = np.argmin(distances)
             if distances[min_idx] < min_distance:
                 min_distance = distances[min_idx]
                 nearest_valley = candidate_valley
-                kn = candidate_valley[min_idx]
+                # kn = min_idx
         
-        # if len(nearest_valley) > 5: # wide candidate valley
-        #     kf = (kn + 5) % (360/5)
-        #     teta = (kn+kf)/2
-        # else: # narrow candidate valley
-        #     teta = (nearest_valley[0] + nearest_valley[-1]) / 2
         teta = nearest_valley[(len(nearest_valley) // 2)]
         teta = teta  * self.sector_size
         teta = teta % 360
         rospy.loginfo(f'candidate valley:{nearest_valley}, goal-sector: {goal_sector}, teta: {teta}')
+        
         # rospy.loginfo(f'theta: {teta}, goal sector NOT in candidate valley. choosing the best sector...')
         # rospy.loginfo(f'candidate valley:{nearest_valley}, kn: {kn}, goal-sector: {goal_sector}, kf: {kf}')
-
         return math.radians(teta)
+        
     
     def plot_polar_density_histogram(self):
 
@@ -204,12 +223,12 @@ class VFH():
 if __name__ == "__main__":
     try:
         config = {
-            'destination' : [5, 2],
+            'destination' : [13, 7],
             'a' : 1,
             'b' : 0.25, 
             'smoothing_factor': 2,
             'sector_size': 5,
-            'threshold':3
+            'threshold':6
         }
         vfh_node = VFH(vfh_config=config)
         vfh_node.run()
