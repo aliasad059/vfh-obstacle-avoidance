@@ -1,8 +1,0 @@
-prefix=/home/hosna/Desktop/project/senario2/devel
-
-Name: turtlebot3_autorace_camera
-Description: Description of turtlebot3_autorace_camera
-Version: 1.1.0
-Cflags: -I/home/hosna/Desktop/project/senario2/devel/include
-Libs: -L${prefix}/lib 
-Requires: dynamic_reconfigure

@@ -1,8 +1,0 @@
-prefix=/home/hosna/Desktop/project/senario2/devel
-
-Name: turtlebot3_autorace_level_crossing_detect
-Description: Description of turtlebot3_autorace_level_crossing_detect
-Version: 1.0.0
-Cflags: -I/home/hosna/Desktop/project/senario2/devel/include
-Libs: -L${prefix}/lib 
-Requires: dynamic_reconfigure

@@ -1,8 +1,0 @@
-prefix=/home/hosna/Desktop/project/senario2/devel
-
-Name: turtlebot3_autorace_traffic_light_core
-Description: Description of turtlebot3_autorace_traffic_light_core
-Version: 1.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 

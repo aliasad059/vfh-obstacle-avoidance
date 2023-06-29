@@ -1,8 +1,0 @@
-prefix=/home/hosna/Desktop/project/senario2/devel
-
-Name: turtlebot3_autorace_construction_core
-Description: Description of turtlebot3_autorace_construction_core
-Version: 1.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
